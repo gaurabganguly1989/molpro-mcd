@@ -1,0 +1,25 @@
+ 
+=====================================
+          SLURM OUTPUT               
+=====================================
+ - Job running on                   :  a227
+ - Job QOS                          :  normal
+ - Job Node list                    :  a227
+ - Job ID assigned by Batch system  :  5701464
+ - Number of nodes                  :  1
+ - Max momory-per-node              :  524288MB
+ - Number of MPI tasks              :  8
+ - Number of requested processes    :  8
+ - OMP_NUM_THREADS                  :  1
+ - Job submission directory         :  /home2/gaurab/projects/porphyrins/mcd/cop/4eg-to-/nevpt.soc
+ - Scratch/Working directory        :  /scratch/slurm_jobs/gaurab/5701464
+ - Wfu directory                    :  /home2/gaurab/projects/porphyrins/mcd/cop/4eg-to-/nevpt.soc/wfu
+ - Input filename                   :  cop.com
+ - Molpro NProc                     :  8/:1 (MPI/:OPENMP)
+ 
+=====================================
+            JOB TIMING               
+=====================================
+ - Start Molpro calculation at  :  Sat Feb 3 16:56:11 CET 2024
+ - Finish Molpro calculation at :  Sat Feb 3 22:58:44 CET 2024
+ - Total running time           :  6hr. 2min. 34sec.

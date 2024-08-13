@@ -1,0 +1,3 @@
+&options degen = 2, temp = 50, nstates = 488,
+skip = 0, ddelta=1e-5, magdiag=.F., theta=.T. /
+

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+#SBATCH --job-name=data                 # job name (shows up in the queue)
+#SBATCH --time=0-03:59:00               # Walltime as (hh:mm:ss)
+#SBATCH --nodes=1                       # number of nodes
+#SBATCH --ntasks=1                      # Tasks per node with work-sharing parallelism (e.g MPI job)
+#SBATCH --cpus-per-task=1               # For multithreading with shared-memory parallelism (e.g. OMP job)
+#SBATCH --mem=64G                       # memory-per-node (GB) (use 75% of available RAM)
+#SBATCH --partition=a36_96               # comma separated lists of partitions (up to 85GB RAM)
+#SBATCH --output=data.out                # job output
+#SBATCH --error=data.err                 # job error messages
+
+# Python Anaconda Distro
+export PATH="/home2/gaurab/anaconda3/bin:${PATH}"
+
+if [ -n "$SLURM_CPUS_PER_TASK" ]; then
+  omp_threads=$SLURM_CPUS_PER_TASK
+  export OMP_NUM_THREADS=$omp_threads
+else
+  omp_threads=1
+  export OMP_NUM_THREADS=$omp_threads
+fi
+
+# GLOBALS
+export HomeDir=$SLURM_SUBMIT_DIR
+
+cd $HomeDir
+#-------------------------------------------------------
+echo " "
+echo "=====================================" 
+echo "          SLURM OUTPUT               "
+echo "=====================================" 
+echo " - Job running on                   : " $(hostname)
+echo " - Job QOS                          : " ${SLURM_JOB_QOS}
+echo " - Job Node list                    : " ${SLURM_NODELIST}
+echo " - Job ID assigned by Batch system  : " ${SLURM_JOBID}
+echo " - Number of nodes                  : " ${SLURM_NNODES}
+echo " - Max momory-per-node              : " ${SLURM_MEM_PER_NODE}"MB"
+echo " - Number of MPI tasks              : " ${SLURM_NTASKS}
+echo " - Number of requested processes    : " ${SLURM_NPROCS}
+echo " - OMP_NUM_THREADS                  : " ${OMP_NUM_THREADS}
+echo " - Job submission directory         : " ${SLURM_SUBMIT_DIR}
+echo " "
+#-------------------------------------------------------
+
+start=`date +%s` # initial time
+
+# run job
+echo " - Start calculation at  : " `date`
+
+./parse-data.py
+
+echo " - Finish calculation at : " `date` 
+
+cd ${HomeDir}
+
+end=`date +%s` # final time
+
+# running time:
+runtime=$((end-start)); hours=$((runtime / 3600)); minutes=$(( (runtime % 3600) / 60 )); seconds=$(( (runtime % 3600) % 60 ))
+
+echo " - Total running time           : " $hours"hr." $minutes"min." $seconds"sec."
+
+# THE END #
+
+

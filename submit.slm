@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+#SBATCH --job-name=cop                  # job name (shows up in the queue)
+#SBATCH --time=0-11:59:00               # Walltime as (hh:mm:ss)
+#SBATCH --nodes=1                       # number of nodes
+#SBATCH --ntasks=8                      # Tasks per node with work-sharing parallelism (e.g MPI job)
+#SBATCH --cpus-per-task=1               # For multithreading with shared-memory parallelism (e.g. OMP job)
+#SBATCH --mem=512G                      # memory-per-node (GB) (use 75% of available RAM)
+#SBATCH --partition=a36_768_long        # comma separated lists of partitions (up to 85GB RAM)
+#SBATCH --output=job.out                # job output
+#SBATCH --error=job.err                 # job error messages
+
+# # Modules
+# . /opt/uochb/soft/spack/latest/share/spack/setup-env.sh
+# module purge
+# module load gsl-2.5-gcc-8.3.1-i42vbal
+# module load boost-1.74.0-gcc-8.3.1-wcu7gcd
+
+# Project
+export Project=cop
+
+# molpro:mpi
+export MOLPRO="${HOME}/programs.aa/molpro/molpro_2023.2/bin"
+export PATH="${MOLPRO}:${PATH}"
+
+# mpich
+export PATH="${HOME}/programs.ai/molpro/globalarray/install/mpich-4.0.2/bin:${PATH}"
+export LD_LIBRARY_PATH="${HOME}/programs.ai/molpro/globalarray/install/mpich-4.0.2/lib:${LD_LIBRARY_PATH}"
+
+# global array:
+export PATH="${HOME}/programs.ai/molpro/globalarray/install/ga-5.8.1/bin:${PATH}"
+export LD_LIBRARY_PATH="${HOME}/programs.ai/molpro/globalarray/install/ga-5.8.1/lib:${LD_LIBRARY_PATH}"
+
+# Python Anaconda Distro
+export PATH="/home2/gaurab/anaconda3/bin:${PATH}"
+
+if [ -n "$SLURM_CPUS_PER_TASK" ]; then
+  omp_threads=$SLURM_CPUS_PER_TASK
+  export OMP_NUM_THREADS=$omp_threads
+else
+  omp_threads=1
+  export OMP_NUM_THREADS=$omp_threads
+fi
+
+export NProc=""${SLURM_NPROCS}"/:"${OMP_NUM_THREADS}""
+
+# GLOBALS
+export HomeDir=$SLURM_SUBMIT_DIR
+mkdir -p $SLURM_SUBMIT_DIR/wfu
+# mkdir -p $SLURM_SUBMIT_DIR/saved
+export WfuDir=$SLURM_SUBMIT_DIR/wfu
+# export SavedDir=$SLURM_SUBMIT_DIR/saved
+mkdir -p $SLURM_SUBMIT_DIR/molden
+export OrbDir=$SLURM_SUBMIT_DIR/molden
+
+
+if [[ -d "/scratch/slurm_jobs/$USER/$SLURM_JOB_ID" ]]
+then
+  export WorkDir=/scratch/slurm_jobs/$USER/$SLURM_JOB_ID
+else
+  mkdir -p /dev/shm/$USER/$SLURM_JOB_ID || exit 1
+  export WorkDir=/dev/shm/$USER/$SLURM_JOB_ID
+fi
+
+# mkdir -p $SLURM_SUBMIT_DIR/work
+# export WorkDir=$SLURM_SUBMIT_DIR/work
+
+# export MOLPRO_GA_IMPL=DISK
+export MOLPRO_GA_IMPL=GA
+
+#-------------------------------------------------------
+echo " "
+echo "=====================================" 
+echo "          SLURM OUTPUT               "
+echo "=====================================" 
+echo " - Job running on                   : " $(hostname)
+echo " - Job QOS                          : " ${SLURM_JOB_QOS}
+echo " - Job Node list                    : " ${SLURM_NODELIST}
+echo " - Job ID assigned by Batch system  : " ${SLURM_JOBID}
+echo " - Number of nodes                  : " ${SLURM_NNODES}
+echo " - Max momory-per-node              : " ${SLURM_MEM_PER_NODE}"MB"
+echo " - Number of MPI tasks              : " ${SLURM_NTASKS}
+echo " - Number of requested processes    : " ${SLURM_NPROCS}
+echo " - OMP_NUM_THREADS                  : " ${OMP_NUM_THREADS}
+echo " - Job submission directory         : " ${SLURM_SUBMIT_DIR}
+echo " - Scratch/Working directory        : " ${WorkDir}
+echo " - Wfu directory                    : " ${WfuDir}
+echo " - Input filename                   : " ${Project}".com"
+echo " - Molpro NProc                     : " ${NProc} "(MPI/:OPENMP)"
+echo " "
+#-------------------------------------------------------
+
+start=`date +%s` # initial time
+
+if [ -e ${WfuDir}/$Project.wfu ]
+  then cp ${WfuDir}/$Project.wfu ${WorkDir}/$Project.wfu
+fi
+
+# run job
+echo "=====================================" 
+echo "            JOB TIMING               "
+echo "=====================================" 
+echo " - Start Molpro calculation at  : " `date`
+
+${MOLPRO}/molpro  ${Project}.com  \
+                  --tasks ${NProc} \
+                  --directory ${WorkDir} \
+                  --global-scratch ${WorkDir} \
+                  --wavefunction-file-repository ${WfuDir} \
+                  --ga-impl GA \
+                  --no-xml-output \
+                  --output ${Project}.nevpt-so.out
+                 
+#--omp-num-threads ${OMP_NUM_THREADS} \
+# --ga-impl DISK \
+# --ga-impl GA \
+echo " - Finish Molpro calculation at : " `date` 
+
+# cp ${WorkDir}/$project.wfu  ${WfuDir}/$project.wfu
+# cp ${WorkDir}/*.molden      ${SaveDir}/*.molden
+
+cd ${HomeDir}
+mv ${HomeDir}/*.molden ${OrbDir}
+rm -fr ${WorkDir}
+
+end=`date +%s` # final time
+
+# running time:
+runtime=$((end-start)); hours=$((runtime / 3600)); minutes=$(( (runtime % 3600) / 60 )); seconds=$(( (runtime % 3600) % 60 ))
+
+echo " - Total running time           : " $hours"hr." $minutes"min." $seconds"sec."
+
+# THE END #
+
+

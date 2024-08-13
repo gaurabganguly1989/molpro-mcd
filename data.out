@@ -1,0 +1,18 @@
+ 
+=====================================
+          SLURM OUTPUT               
+=====================================
+ - Job running on                   :  a131
+ - Job QOS                          :  normal
+ - Job Node list                    :  a131
+ - Job ID assigned by Batch system  :  6001955
+ - Number of nodes                  :  1
+ - Max momory-per-node              :  65536MB
+ - Number of MPI tasks              :  1
+ - Number of requested processes    :  1
+ - OMP_NUM_THREADS                  :  1
+ - Job submission directory         :  /home2/gaurab/projects/porphyrins/mcd/cop/4eg-to-/nevpt.soc
+ 
+ - Start calculation at  :  Wed Feb 7 20:26:01 CET 2024
+ - Finish calculation at :  Wed Feb 7 21:30:03 CET 2024
+ - Total running time           :  1hr. 4min. 2sec.
